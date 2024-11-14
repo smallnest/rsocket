@@ -4,7 +4,10 @@ import (
 	"log"
 	"net"
 	"syscall"
+	"time"
 )
+
+var _ net.Conn = (*Conn)(nil)
 
 // TCPListener is a TCP network listener baseded on rsocket.
 type TCPListener struct {
@@ -145,18 +148,18 @@ func (c *Conn) RemoteAddr() net.Addr {
 
 // SetDeadline sets the read and write deadlines associated with the connection.
 // not implementation.
-func (c *Conn) SetDeadline() error {
+func (c *Conn) SetDeadline(time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the read deadline on the connection.
 // not implementation.
-func (c *Conn) SetReadDeadline() error {
+func (c *Conn) SetReadDeadline(time.Time) error {
 	return nil
 }
 
 // SetWriteDeadline sets the write deadline on the connection.
 // not implementation.
-func (c *Conn) SetWriteDeadline() error {
+func (c *Conn) SetWriteDeadline(time.Time) error {
 	return nil
 }
