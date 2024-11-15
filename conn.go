@@ -9,6 +9,18 @@ import (
 
 var _ net.Conn = (*TCPConn)(nil)
 
+type OptionSocketFn func(fd int) error
+
+func WithLocalAddr(ip string) OptionSocketFn {
+	return func(fd int) error {
+		srcAddr := net.ParseIP(ip)
+		sa := &syscall.SockaddrInet4{}
+		copy(sa.Addr[:], srcAddr.To4())
+
+		return Bind(fd, sa)
+	}
+}
+
 // TCPListener is a TCP network listener baseded on rsocket.
 type TCPListener struct {
 	ip      string
@@ -25,11 +37,20 @@ type TCPConn struct {
 
 // NewTCPListener creates a new TCPListener.
 // It binds the listener to the given ip and port.
-func NewTCPListener(ip string, port int) (*TCPListener, error) {
+func NewTCPListener(ip string, port int, optFns ...OptionSocketFn) (*TCPListener, error) {
 	fd, err := Socket(AF_INET, SOCK_STREAM, 0)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	for _, optFn := range optFns {
+		err = optFn(fd)
+		if err != nil {
+			Close(fd)
+			return nil, err
+		}
+	}
+
 	srcAddr := net.ParseIP(ip)
 	sa := &syscall.SockaddrInet4{
 		Port: port,
@@ -92,10 +113,18 @@ func (l *TCPListener) Addr() net.Addr {
 }
 
 // DialTCP connects to the address on the named network based on rsocket.
-func DialTCP(address string) (*TCPConn, error) {
+func DialTCP(address string, optFns ...OptionSocketFn) (*TCPConn, error) {
 	fd, err := Socket(AF_INET, SOCK_STREAM, 0)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	for _, optFn := range optFns {
+		err = optFn(fd)
+		if err != nil {
+			Close(fd)
+			return nil, err
+		}
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", address)
