@@ -6,6 +6,8 @@ This project encapsulates rsocket, provides an interface compatible with `net.Co
 ![GitHub](https://img.shields.io/github/license/smallnest/rsocket) [![GoDoc](https://godoc.org/github.com/smallnest/rsocket?status.png)](http://godoc.org/github.com/smallnest/rsocket)  
 
 
+**This project is developing so don't use it in production environments.**
+
 ## Usage
 
 Some examples of using rsocket are provided in the `examples` directory. The examples contains a simple TCP/UDP echo server and client.

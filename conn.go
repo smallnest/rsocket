@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var _ net.Conn = (*Conn)(nil)
+var _ net.Conn = (*TCPConn)(nil)
 
 // TCPListener is a TCP network listener baseded on rsocket.
 type TCPListener struct {
@@ -17,7 +17,7 @@ type TCPListener struct {
 	fd      int
 }
 
-type Conn struct {
+type TCPConn struct {
 	fd         int
 	localAddr  *net.TCPAddr
 	remoteAddr *net.TCPAddr
@@ -58,7 +58,7 @@ func NewTCPListener(ip string, port int) (*TCPListener, error) {
 }
 
 // Accept waits for and returns the next connection to the listener.
-func (l *TCPListener) Accept() (*Conn, error) {
+func (l *TCPListener) Accept() (*TCPConn, error) {
 	fd, addr, err := Accept(l.fd)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (l *TCPListener) Accept() (*Conn, error) {
 		Port: port,
 	}
 
-	conn := &Conn{
+	conn := &TCPConn{
 		fd:         fd,
 		localAddr:  l.tcpAddr,
 		remoteAddr: remoteAddr,
@@ -92,7 +92,7 @@ func (l *TCPListener) Addr() net.Addr {
 }
 
 // DialTCP connects to the address on the named network based on rsocket.
-func DialTCP(address string) (*Conn, error) {
+func DialTCP(address string) (*TCPConn, error) {
 	fd, err := Socket(AF_INET, SOCK_STREAM, 0)
 	if err != nil {
 		log.Fatal(err)
@@ -112,7 +112,7 @@ func DialTCP(address string) (*Conn, error) {
 		return nil, err
 	}
 
-	conn := &Conn{
+	conn := &TCPConn{
 		fd:         fd,
 		localAddr:  nil,
 		remoteAddr: tcpAddr,
@@ -122,44 +122,44 @@ func DialTCP(address string) (*Conn, error) {
 }
 
 // Read reads data from the connection.
-func (c *Conn) Read(p []byte) (int, error) {
+func (c *TCPConn) Read(p []byte) (int, error) {
 	return Read(c.fd, p)
 }
 
 // Write writes data to the connection.
-func (c *Conn) Write(p []byte) (int, error) {
+func (c *TCPConn) Write(p []byte) (int, error) {
 	return Write(c.fd, p)
 }
 
 // Close closes the connection.
-func (c *Conn) Close() error {
+func (c *TCPConn) Close() error {
 	return Close(c.fd)
 }
 
 // LocalAddr returns the local network address.
-func (c *Conn) LocalAddr() net.Addr {
+func (c *TCPConn) LocalAddr() net.Addr {
 	return c.localAddr
 }
 
 // RemoteAddr returns the remote network address.
-func (c *Conn) RemoteAddr() net.Addr {
+func (c *TCPConn) RemoteAddr() net.Addr {
 	return c.remoteAddr
 }
 
 // SetDeadline sets the read and write deadlines associated with the connection.
 // not implementation.
-func (c *Conn) SetDeadline(time.Time) error {
+func (c *TCPConn) SetDeadline(time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the read deadline on the connection.
 // not implementation.
-func (c *Conn) SetReadDeadline(time.Time) error {
+func (c *TCPConn) SetReadDeadline(time.Time) error {
 	return nil
 }
 
 // SetWriteDeadline sets the write deadline on the connection.
 // not implementation.
-func (c *Conn) SetWriteDeadline(time.Time) error {
+func (c *TCPConn) SetWriteDeadline(time.Time) error {
 	return nil
 }
