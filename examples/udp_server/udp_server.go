@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// 创建RDMA UDP socket
-	fd, err := rsocket.Socket(rsocket.AF_INET, rsocket.SOCK_DGRAM, rsocket.SOCK_DGRAM)
+	fd, err := rsocket.Socket(rsocket.AF_INET, rsocket.SOCK_DGRAM, 0)
 	if err != nil {
 		log.Fatalf("socket err: %v", err)
 	}

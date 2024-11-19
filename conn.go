@@ -112,6 +112,11 @@ func (l *TCPListener) Addr() net.Addr {
 	return l.tcpAddr
 }
 
+// File returns the listener's file descriptor.
+func (l *TCPListener) File() int {
+	return l.fd
+}
+
 // DialTCP connects to the address on the named network based on rsocket.
 func DialTCP(address string, optFns ...OptionSocketFn) (*TCPConn, error) {
 	fd, err := Socket(AF_INET, SOCK_STREAM, 0)
@@ -148,6 +153,11 @@ func DialTCP(address string, optFns ...OptionSocketFn) (*TCPConn, error) {
 	}
 
 	return conn, nil
+}
+
+// File returns the connection's file descriptor.
+func (c *TCPConn) File() int {
+	return c.fd
 }
 
 // Read reads data from the connection.
