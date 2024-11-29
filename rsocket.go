@@ -9,6 +9,8 @@ import "C"
 import (
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 // Socket domain constants
@@ -124,12 +126,78 @@ func Read(fd int, p []byte) (int, error) {
 	return int(n), nil
 }
 
+// RecvFrom receives data from a specific address
+func RecvFrom(fd int, p []byte, flags int) (int, syscall.Sockaddr, error) {
+	if len(p) == 0 {
+		return 0, nil, nil
+	}
+	var addr syscall.RawSockaddrAny
+	var addrlen C.socklen_t = C.socklen_t(syscall.SizeofSockaddrAny)
+	n := C.rrecvfrom(C.int(fd), unsafe.Pointer(&p[0]), C.size_t(len(p)), C.int(flags),
+		(*C.struct_sockaddr)(unsafe.Pointer(&addr)), &addrlen)
+	if n < 0 {
+		return 0, nil, syscall.Errno(-n)
+	}
+	sa, err := anyToSockaddr(&addr)
+	if err != nil {
+		return 0, nil, err
+	}
+	return int(n), sa, nil
+}
+
+// RecvMsg receives a message from the socket
+func RecvMsg(fd int, msg *syscall.Msghdr, flags int) (int, error) {
+	n := C.rrecvmsg(C.int(fd), (*C.struct_msghdr)(unsafe.Pointer(msg)), C.int(flags))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
+// SendTo sends data to a specific address
+func SendTo(fd int, p []byte, flags int, sa syscall.Sockaddr) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	ptr, l, err := sockaddrToAny(sa)
+	if err != nil {
+		return 0, err
+	}
+	n := C.rsendto(C.int(fd), unsafe.Pointer(&p[0]), C.size_t(len(p)), C.int(flags),
+		(*C.struct_sockaddr)(unsafe.Pointer(ptr)), C.socklen_t(l))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
+// SendMsg sends a message on the socket
+func SendMsg(fd int, msg *syscall.Msghdr, flags int) (int, error) {
+	n := C.rsendmsg(C.int(fd), (*C.struct_msghdr)(unsafe.Pointer(msg)), C.int(flags))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
 // Write writes data to the socket
 func Write(fd int, p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
 	n := C.rwrite(C.int(fd), unsafe.Pointer(&p[0]), C.size_t(len(p)))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
+// Writev writes multiple buffers to the socket
+func Writev(fd int, iov []syscall.Iovec) (int, error) {
+	if len(iov) == 0 {
+		return 0, nil
+	}
+	n := C.rwritev(C.int(fd), (*C.struct_iovec)(unsafe.Pointer(&iov[0])), C.int(len(iov)))
 	if n < 0 {
 		return 0, syscall.Errno(-n)
 	}
@@ -315,4 +383,53 @@ func GetSockName(fd int) (syscall.Sockaddr, error) {
 		return nil, syscall.Errno(-rc)
 	}
 	return anyToSockaddr(&addr)
+}
+
+// Poll polls the file descriptors
+func Poll(fds []unix.PollFd, timeout int) (int, error) {
+	n := C.rpoll((*C.struct_pollfd)(unsafe.Pointer(&fds[0])), C.nfds_t(len(fds)), C.int(timeout))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
+// Select waits for some file descriptors to become ready to perform I/O
+func Select(nfds int, readfds, writefds, exceptfds *syscall.FdSet, timeout *syscall.Timeval) (int, error) {
+	n := C.rselect(C.int(nfds), (*C.fd_set)(unsafe.Pointer(readfds)), (*C.fd_set)(unsafe.Pointer(writefds)),
+		(*C.fd_set)(unsafe.Pointer(exceptfds)), (*C.struct_timeval)(unsafe.Pointer(timeout)))
+	if n < 0 {
+		return 0, syscall.Errno(-n)
+	}
+	return int(n), nil
+}
+
+// Iomap maps a file or device into memory
+func Iomap(fd int, buf []byte, prot int, flags int, offset int64) (int64, error) {
+	ptr := unsafe.Pointer(&buf[0])
+	rc := C.riomap(C.int(fd), ptr, C.size_t(len(buf)), C.int(prot), C.int(flags), C.off_t(offset))
+	if rc == ^C.off_t(0) {
+		return 0, syscall.Errno(-rc)
+	}
+	return int64(rc), nil
+}
+
+// Iounmap unmaps a file or device from memory
+func Iounmap(fd int, buf []byte) error {
+	ptr := unsafe.Pointer(&buf[0])
+	rc := C.riounmap(C.int(fd), ptr, C.size_t(len(buf)))
+	if rc < 0 {
+		return syscall.Errno(-rc)
+	}
+	return nil
+}
+
+// Iowrite writes data to a file or device at a specific offset
+func Iowrite(fd int, buf []byte, offset int64, flags int) (int, error) {
+	ptr := unsafe.Pointer(&buf[0])
+	rc := C.riowrite(C.int(fd), ptr, C.size_t(len(buf)), C.off_t(offset), C.int(flags))
+	if rc < 0 {
+		return 0, syscall.Errno(-rc)
+	}
+	return int(rc), nil
 }

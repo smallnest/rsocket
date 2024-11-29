@@ -12,6 +12,9 @@ This project encapsulates rsocket, provides an interface compatible with `net.Co
 
 Some examples of using rsocket are provided in the `examples` directory. The examples contains a simple TCP/UDP echo server and client.
 
+
+**Notice**: udp doesn't work
+
 ## Reference
 
 - [rsocket(7) - Linux man page](https://linux.die.net/man/7/rsocket)
