@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -9,7 +10,14 @@ import (
 	"github.com/smallnest/rsocket"
 )
 
+var (
+	host = flag.String("h", "0.0.0.0", "listen server host")
+	port = flag.Int("p", 8000, "listen server port")
+)
+
 func main() {
+	flag.Parse()
+
 	// 创建RDMA socket
 	fd, err := rsocket.Socket(rsocket.AF_INET, rsocket.SOCK_STREAM, 0)
 	if err != nil {
@@ -18,7 +26,7 @@ func main() {
 	defer rsocket.Close(fd)
 
 	// 绑定到地址
-	addr := &net.TCPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8000}
+	addr := &net.TCPAddr{IP: net.ParseIP(*host), Port: *port}
 	sa := &syscall.SockaddrInet4{
 		Port: addr.Port,
 	}
