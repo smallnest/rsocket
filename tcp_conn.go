@@ -8,6 +8,7 @@ import (
 )
 
 var _ net.Conn = (*TCPConn)(nil)
+var _ net.Listener = (*TCPListener)(nil)
 
 type OptionSocketFn func(fd int) error
 
@@ -79,7 +80,7 @@ func NewTCPListener(ip string, port int, optFns ...OptionSocketFn) (*TCPListener
 }
 
 // Accept waits for and returns the next connection to the listener.
-func (l *TCPListener) Accept() (*TCPConn, error) {
+func (l *TCPListener) Accept() (net.Conn, error) {
 	fd, addr, err := Accept(l.fd)
 	if err != nil {
 		return nil, err
