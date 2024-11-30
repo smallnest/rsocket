@@ -21,7 +21,7 @@ func main() {
 	tcpPort, _ := strconv.Atoi(port)
 
 	// 创建RDMA socket
-	ln, err := rsocket.NewTCPListener(host, tcpPort)
+	ln, err := rsocket.NewTCPListener(host, tcpPort, 128)
 	if err != nil {
 		log.Fatal(err)
 	}

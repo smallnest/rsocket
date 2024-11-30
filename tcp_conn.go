@@ -38,7 +38,7 @@ type TCPConn struct {
 
 // NewTCPListener creates a new TCPListener.
 // It binds the listener to the given ip and port.
-func NewTCPListener(ip string, port int, optFns ...OptionSocketFn) (*TCPListener, error) {
+func NewTCPListener(ip string, port int, backlog int, optFns ...OptionSocketFn) (*TCPListener, error) {
 	fd, err := Socket(AF_INET, SOCK_STREAM, 0)
 	if err != nil {
 		log.Fatal(err)
@@ -62,7 +62,7 @@ func NewTCPListener(ip string, port int, optFns ...OptionSocketFn) (*TCPListener
 		return nil, err
 	}
 
-	if err := Listen(fd, 128); err != nil {
+	if err := Listen(fd, backlog); err != nil {
 		return nil, err
 	}
 
