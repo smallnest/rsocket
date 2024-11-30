@@ -12,10 +12,12 @@ var _ net.Listener = (*TCPListener)(nil)
 
 type OptionSocketFn func(fd int) error
 
-func WithLocalAddr(ip string) OptionSocketFn {
+func WithLocalAddr(ip string, port int) OptionSocketFn {
 	return func(fd int) error {
 		srcAddr := net.ParseIP(ip)
-		sa := &syscall.SockaddrInet4{}
+		sa := &syscall.SockaddrInet4{
+			Port: port,
+		}
 		copy(sa.Addr[:], srcAddr.To4())
 
 		return Bind(fd, sa)
