@@ -17,7 +17,7 @@ var (
 func main() {
 	flag.Parse()
 
-	host, port, err := net.SplitHostPort(*serverAddr)
+	host, port, _ := net.SplitHostPort(*serverAddr)
 	tcpPort, _ := strconv.Atoi(port)
 
 	// 创建RDMA socket
@@ -27,7 +27,7 @@ func main() {
 	}
 	defer ln.Close()
 
-	fmt.Printf("服务器正在监听 :%d\n", *serverAddr)
+	fmt.Printf("服务器正在监听 :%s\n", *serverAddr)
 
 	for {
 		conn, err := ln.Accept()
